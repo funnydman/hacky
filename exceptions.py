@@ -1,0 +1,6 @@
+class HackyBaseException(Exception):
+    ...
+
+
+class HackySyntaxError(HackyBaseException):
+    ...
