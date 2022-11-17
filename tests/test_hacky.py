@@ -4,17 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
-from exceptions import HackySyntaxError
-from main import HackyAssembler, C_INST_OPCODE, A_INST_OPCODE
+from exceptions import HackySyntaxError, HackyFailedToProcessFileError, HackyAInstructionOutOfBoundary
+from hacky import HackyAssembler, C_INST_OPCODE, A_INST_OPCODE
 from symbols import PRE_DEFINED_SYMBOLS
 
 
 class TestHackyAssembler:
     TEST_FILE_PATH = '/path/to/file.asm'
+    TEST_FIXTURES_PATH = './tests/fixtures/'
 
-    @staticmethod
-    def get_fixture_file(file_name):
-        return Path("./tests/fixtures/") / file_name
+    def get_fixture_file(self, file_name):
+        return Path(self.TEST_FIXTURES_PATH) / file_name
 
     @pytest.fixture
     def hacky(self):
@@ -67,6 +67,21 @@ class TestHackyAssembler:
         test_file = self.get_fixture_file(test_file)
         assert hacky.assemble(test_file) == result
 
+    def test_assemble_file_not_found(self, hacky):
+        with pytest.raises(
+                HackyFailedToProcessFileError,
+                match=re.escape(
+                    f"Unable to process the file. Reason: [Errno 2] No such file or directory: '{self.TEST_FILE_PATH}'")
+        ):
+            hacky.assemble(self.TEST_FILE_PATH)
+
+    def test_assemble_invalid_file_extension(self, hacky):
+        with pytest.raises(
+                HackyFailedToProcessFileError,
+                match="Invalid file extension, expected: '.asm', got: '.as'"
+        ):
+            hacky.assemble('/some/file.as')
+
     @pytest.mark.parametrize('content, result', (
             (
                     [
@@ -107,7 +122,7 @@ class TestHackyAssembler:
 
             ),
     ))
-    @patch('main.HackyAssembler._preprocess_file')
+    @patch('hacky.HackyAssembler._preprocess_file')
     def test_assemble_(self, mock__preprocess_file, hacky, content, result):
         mock__preprocess_file.return_value = content
         assert hacky.assemble(self.TEST_FILE_PATH) == result
@@ -177,3 +192,11 @@ class TestHackyAssembler:
     ))
     def test_assemble_a_instruction(self, hacky, inst, opcode):
         assert hacky.assemble_a_instruction(inst) == opcode
+
+    @pytest.mark.parametrize('inst', (
+            -1,
+            32768
+    ))
+    def test_assemble_a_instruction_out_of_boundary_error(self, hacky, inst):
+        with pytest.raises(HackyAInstructionOutOfBoundary):
+            assert hacky.assemble_a_instruction(inst)

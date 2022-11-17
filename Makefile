@@ -1,7 +1,7 @@
 TESTS_FOLDER := "tests/"
 SRC_FOLDER := "main.py"
 
-run-unittest:
+run-unit-test:
 	coverage run -m pytest ${TESTS_FOLDER} && coverage report -m
 
 run-static-analysis:
