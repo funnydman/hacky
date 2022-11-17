@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from constants import C_INST_OPCODE, A_INST_OPCODE
-from exceptions import HackySyntaxError, HackyFailedToProcessFileError, HackyInternalError
+from exceptions import HackySyntaxError, HackyFailedToProcessFileError
 from hacky import HackyAssembler
 from helper import PROJECT_BASE_PATH
 from symbols import PRE_DEFINED_SYMBOLS
@@ -130,6 +130,7 @@ class TestHackyAssembler:
     ))
     @patch('hacky.HackyAssembler._preprocess_file')
     def test_assemble_(self, mock__preprocess_file, hacky, content, result):
+        # TODO: test symbol table
         mock__preprocess_file.return_value = content
         assert hacky.assemble(self.TEST_FILE_PATH) == result
 
@@ -212,7 +213,7 @@ class TestHackyAssembler:
     ))
     def test_assemble_a_instruction_out_of_boundary_error(self, symbol_table, hacky, inst):
         with pytest.raises(
-                HackyInternalError,
+                HackySyntaxError,
                 match=re.escape('Constant must be in the range (0, 32767)')
         ):
             assert hacky.assemble_a_instruction(inst, symbol_table)
@@ -223,7 +224,7 @@ class TestHackyAssembler:
     ))
     def test_assemble_a_instruction_resolving_error(self, symbol_table, hacky, inst):
         with pytest.raises(
-                HackyInternalError,
+                HackySyntaxError,
                 match=re.escape(f'Can not resolve "{inst}" instruction')
         ):
             assert hacky.assemble_a_instruction(inst, symbol_table)

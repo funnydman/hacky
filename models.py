@@ -1,0 +1,101 @@
+from dataclasses import dataclass
+from typing import Optional
+
+from common.models import InstructionABC
+from constants import (
+    AInst,
+    CompOpcode,
+    DestOpcode,
+    JumpOpcode,
+    C_INST_OPCODE,
+    SymbolTable,
+    A_INST_MARK,
+    A_INST_OPCODE,
+    INSTRUCTION_SIZE,
+    A_CONSTANT_RANGE
+)
+from exceptions import HackySyntaxError, HackyInternalError
+from symbols import COMP_SYMBOLS_TABLE, DEST_SYMBOLS_TABLE, JUMP_SYMBOLS_TABLE
+
+
+@dataclass(frozen=True)
+class CInstructionModel(InstructionABC):
+    comp: CompOpcode
+    dest: Optional[str] = None
+    jump: Optional[str] = None
+
+    def opcode(self) -> str:
+        dest_op = self.get_dest_opcode()
+        comp_op: CompOpcode = self.get_comp_opcode()
+        jump_op: JumpOpcode = self.get_jump_opcode()
+        return C_INST_OPCODE + comp_op + dest_op + jump_op
+
+    @classmethod
+    def parse_instruction(cls, inst: str) -> 'CInstructionModel':
+        dest, comp, jump = None, inst, None
+        if ';' in inst:
+            comp, jump = inst.split(';')
+            if '=' in comp:
+                dest, comp = comp.split('=')
+        else:
+            if '=' in inst:
+                dest, comp = inst.split('=')
+        return cls(dest=dest, comp=comp, jump=jump)
+
+    def get_comp_opcode(self) -> CompOpcode:
+        try:
+            return COMP_SYMBOLS_TABLE[self.comp]
+        except KeyError as exc:
+            raise HackySyntaxError(f"Instruction mnemonic '{self.comp}' is not valid") from exc
+
+    def get_dest_opcode(self) -> DestOpcode:
+        try:
+            return DEST_SYMBOLS_TABLE[self.dest]
+        except KeyError as exc:
+            raise HackySyntaxError(f"Instruction mnemonic '{self.dest}' is not valid") from exc
+
+    def get_jump_opcode(self) -> JumpOpcode:
+        try:
+            return JUMP_SYMBOLS_TABLE[self.jump]
+        except KeyError as exc:
+            raise HackySyntaxError(f"Instruction mnemonic '{self.jump}' is not valid") from exc
+
+
+@dataclass(frozen=True)
+class AInstructionModel(InstructionABC):
+    inst: AInst
+
+    def opcode(self, symbol_table: dict) -> str:
+        a_const = self.parse_instruction(self.inst, symbol_table)
+
+        start_range, end_range = A_CONSTANT_RANGE
+        if not start_range <= a_const <= end_range:
+            raise HackyInternalError(f'Constant must be in the range {A_CONSTANT_RANGE}')
+
+        binary = self._get_binary(a_const)
+        return A_INST_OPCODE + '0' * (INSTRUCTION_SIZE - len(A_INST_OPCODE) - len(binary)) + binary
+
+    def parse_instruction(self, inst: str, symbol_table: SymbolTable) -> str:
+        a_const = self.get_const_value()
+        if self._is_absolute_address(a_const):
+            a_const = int(a_const)
+        else:
+            a_const = symbol_table.get(a_const)
+            if a_const is None:
+                raise HackyInternalError(f'Can not resolve "{inst}" instruction')
+        return a_const
+
+    def get_const_value(self) -> str:
+        return self.inst.removeprefix(A_INST_MARK)
+
+    @staticmethod
+    def _is_absolute_address(astr: str) -> bool:
+        try:
+            int(astr)
+            return True
+        except (ValueError, TypeError):
+            return False
+
+    @staticmethod
+    def _get_binary(val: int) -> str:
+        return bin(val)[2:]

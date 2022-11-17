@@ -6,10 +6,9 @@ Symbols:
 - pre-defined symbols
 
 TODO:
-validate file extension, validate variable/label naming
-validate address accessing, raise exception on out of boundary
+validate variable/label naming
 add more tests (need 100%)
-configure run-static analysis, add more typing, refactor some parts
+configure run-static analysis, add more typing, refactor some parts, add proper types
 """
 import logging
 from typing import List
@@ -18,17 +17,14 @@ from constants import (
     Instruction,
     CInstruction,
     Opcode,
-    C_INST_OPCODE,
     AInstruction,
     SymbolTable,
-    A_INST_OPCODE,
-    A_CONSTANT_RANGE,
-    INSTRUCTION_SIZE,
     VAR_INST_START_ADDR
 )
-from exceptions import HackySyntaxError, HackyInternalError
+from exceptions import HackySyntaxError, HackyBaseException
 from helper import HackyAssemblerHelper
 from logger import logger
+from models import CInstructionModel, AInstructionModel
 
 
 class HackyAssembler(HackyAssemblerHelper):
@@ -53,32 +49,21 @@ class HackyAssembler(HackyAssemblerHelper):
 
     def assemble_c_instruction(self, inst: CInstruction) -> Opcode:
         try:
-            dest, comp, jump = self._parse_c_instruction(inst)
-
-            self.logger.debug(
-                'Assembling C instruction: %s with mnemonics dest=%s, comp=%s, jump=%s', inst, dest, comp, jump
-            )
-
-            dest_op = self._get_dest_opcode(dest)
-            comp_op = self._get_comp_opcode(comp)
-            jump_op = self._get_jump_opcode(jump)
-        except Exception as exc:
+            self.logger.debug('Assembling C instruction: %s', inst)
+            opcode = CInstructionModel.parse_instruction(inst).opcode()
+        except HackyBaseException as exc:
             raise HackySyntaxError(f"Unable to assemble instruction '{inst}'. Reason: {str(exc)}") from exc
 
-        return C_INST_OPCODE + comp_op + dest_op + jump_op
+        return opcode
 
     def assemble_a_instruction(self, inst: AInstruction, symbol_table: SymbolTable) -> Opcode:
-        # has the format @xxx
-        self.logger.debug('Assembling A instruction: %s', inst)
+        try:
+            self.logger.debug('Assembling A instruction: %s', inst)
+            opcode = AInstructionModel(inst=inst).opcode(symbol_table)
+        except HackyBaseException as exc:
+            raise HackySyntaxError(f"Unable to assemble instruction '{inst}'. Reason: {str(exc)}") from exc
 
-        a_const = self._parse_a_instruction(inst, symbol_table)
-
-        start_range, end_range = A_CONSTANT_RANGE
-        if not start_range <= a_const <= end_range:
-            raise HackyInternalError(f'Constant must be in the range {A_CONSTANT_RANGE}')
-
-        binary = self._get_binary(a_const)
-        return A_INST_OPCODE + '0' * (INSTRUCTION_SIZE - len(A_INST_OPCODE) - len(binary)) + binary
+        return opcode
 
     def _resolve_labels(self, symbol_table: SymbolTable, content: List[str]) -> str:
         result = []

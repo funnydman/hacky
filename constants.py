@@ -17,6 +17,7 @@ ALLOWED_SYMBOL_CHARS = string.ascii_letters + string.digits + '_.$:'
 A_CONSTANT_RANGE = (0, 32767)
 
 AInstruction = TypeVar('AInstruction', bound=str)
+AInst = TypeVar('AInst', bound=str)
 CInstruction = TypeVar('CInstruction', bound=str)
 
 CCompPartInst = TypeVar('CCompPartInst', bound=str)
@@ -30,5 +31,9 @@ Opcode = TypeVar('Opcode', bound=str)
 CompOpcode = TypeVar('CompOpcode', bound=str)
 JumpOpcode = TypeVar('JumpOpcode', bound=str)
 DestOpcode = TypeVar('DestOpcode', bound=str)
+
+# DestOpcode = NewType('DestOpcode', str)
+# CompOpcode = NewType('CompOpcode', str)
+# JumpOpcode = NewType('JumpOpcode', str)
 
 SymbolTable = TypeVar('SymbolTable', bound=dict)

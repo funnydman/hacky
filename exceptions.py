@@ -9,8 +9,10 @@ class HackySyntaxError(HackyBaseException):
 class HackyFailedToProcessFileError(HackyBaseException):
     ...
 
+
 class HackyFailedToWriteFile(HackyBaseException):
     ...
+
 
 class HackyInternalError(HackySyntaxError):
     ...
