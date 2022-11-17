@@ -13,7 +13,7 @@ COMMENT_MARK = '//'
 INPUT_FILE_EXTENSION = '.asm'
 OUTPUT_FILE_EXTENSION = '.hack'
 
-ALLOWED_SYMBOL_CHARS = string.ascii_letters + string.digits + '_.$:'
+ALLOWED_SYMBOL_CHARS = set(string.ascii_letters + string.digits + '_.$:')
 A_CONSTANT_RANGE = (0, 32767)
 
 AInstruction = TypeVar('AInstruction', bound=str)

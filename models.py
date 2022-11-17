@@ -12,7 +12,7 @@ from constants import (
     A_INST_MARK,
     A_INST_OPCODE,
     INSTRUCTION_SIZE,
-    A_CONSTANT_RANGE
+    A_CONSTANT_RANGE, ALLOWED_SYMBOL_CHARS
 )
 from exceptions import HackySyntaxError, HackyInternalError
 from symbols import COMP_SYMBOLS_TABLE, DEST_SYMBOLS_TABLE, JUMP_SYMBOLS_TABLE
@@ -20,14 +20,14 @@ from symbols import COMP_SYMBOLS_TABLE, DEST_SYMBOLS_TABLE, JUMP_SYMBOLS_TABLE
 
 @dataclass(frozen=True)
 class CInstructionModel(InstructionABC):
-    comp: CompOpcode
+    comp: str
     dest: Optional[str] = None
     jump: Optional[str] = None
 
     def opcode(self) -> str:
         dest_op = self.get_dest_opcode()
-        comp_op: CompOpcode = self.get_comp_opcode()
-        jump_op: JumpOpcode = self.get_jump_opcode()
+        comp_op = self.get_comp_opcode()
+        jump_op = self.get_jump_opcode()
         return C_INST_OPCODE + comp_op + dest_op + jump_op
 
     @classmethod
@@ -77,6 +77,7 @@ class AInstructionModel(InstructionABC):
 
     def parse_instruction(self, inst: str, symbol_table: SymbolTable) -> str:
         a_const = self.get_const_value()
+        self._validate(a_const)
         if self._is_absolute_address(a_const):
             a_const = int(a_const)
         else:
@@ -99,3 +100,11 @@ class AInstructionModel(InstructionABC):
     @staticmethod
     def _get_binary(val: int) -> str:
         return bin(val)[2:]
+
+    def _validate(self, a_const: str) -> None:
+        if not a_const:
+            raise HackySyntaxError('Empty instruction')
+        if a_const[0].isdigit() and not self._is_absolute_address(a_const):
+            raise HackySyntaxError('Invalid name')
+        if any(ch not in ALLOWED_SYMBOL_CHARS for ch in a_const):
+            raise HackySyntaxError('Names can contain only allowed characters')

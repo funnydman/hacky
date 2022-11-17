@@ -6,7 +6,6 @@ Symbols:
 - pre-defined symbols
 
 TODO:
-validate variable/label naming
 add more tests (need 100%)
 configure run-static analysis, add more typing, refactor some parts, add proper types
 """
@@ -66,7 +65,7 @@ class HackyAssembler(HackyAssemblerHelper):
         return opcode
 
     def _resolve_labels(self, symbol_table: SymbolTable, content: List[str]) -> str:
-        result = []
+        opcodes = []
         curr_var_addr = VAR_INST_START_ADDR
         for line in content:
             if self._is_label(line):
@@ -78,20 +77,19 @@ class HackyAssembler(HackyAssemblerHelper):
                 if a_const not in symbol_table and not self._is_absolute_address(a_const):
                     symbol_table[a_const] = curr_var_addr
                     curr_var_addr += 1
-                assembled = self.assemble_a_instruction(line, symbol_table)
+                assembled_inst = self.assemble_a_instruction(line, symbol_table)
             elif self._is_c_instruction(line):
-                assembled = self.assemble_c_instruction(line)
+                assembled_inst = self.assemble_c_instruction(line)
             else:
                 raise HackySyntaxError(f'Unknown instruction {line}')
 
-            result.append(assembled)
+            opcodes.append(assembled_inst)
 
-        return '\n'.join(result)
+        return '\n'.join(opcodes)
 
 
 if __name__ == '__main__':
     import sys
 
-    print(sys.argv)
     hacky = HackyAssembler()
     hacky.assembly_to_file(sys.argv[1])

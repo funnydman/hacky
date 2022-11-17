@@ -206,17 +206,28 @@ class TestHackyAssembler:
     def test_assemble_a_instruction(self, symbol_table, hacky, inst, opcode):
         assert hacky.assemble_a_instruction(inst, symbol_table) == opcode
 
-    @pytest.mark.parametrize('inst', (
-            '@-1',
+    @pytest.mark.parametrize('invalid_inst', (
             '@32768',
             '@99999'
     ))
-    def test_assemble_a_instruction_out_of_boundary_error(self, symbol_table, hacky, inst):
+    def test_assemble_a_instruction_out_of_boundary_error(self, symbol_table, hacky, invalid_inst):
         with pytest.raises(
                 HackySyntaxError,
                 match=re.escape('Constant must be in the range (0, 32767)')
         ):
-            assert hacky.assemble_a_instruction(inst, symbol_table)
+            assert hacky.assemble_a_instruction(invalid_inst, symbol_table)
+
+    @pytest.mark.parametrize('invalid_inst, error_msg', (
+            ('@-1', "Unable to assemble instruction '@-1'. Reason: Names can contain only allowed characters"),
+            ('@', "Unable to assemble instruction '@'. Reason: Empty instruction"),
+            ('@0var', "Unable to assemble instruction '@0var'. Reason: Invalid name")
+    ))
+    def test_assemble_a_instruction_invalid_inst_error(self, symbol_table, hacky, invalid_inst, error_msg):
+        with pytest.raises(
+                HackySyntaxError,
+                match=re.escape(error_msg)
+        ):
+            assert hacky.assemble_a_instruction(invalid_inst, symbol_table)
 
     @pytest.mark.parametrize('inst', (
             '@label',
