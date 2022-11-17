@@ -4,17 +4,23 @@ from unittest.mock import patch
 
 import pytest
 
-from exceptions import HackySyntaxError, HackyFailedToProcessFileError, HackyAInstructionOutOfBoundary
-from hacky import HackyAssembler, C_INST_OPCODE, A_INST_OPCODE
+from constants import C_INST_OPCODE, A_INST_OPCODE
+from exceptions import HackySyntaxError, HackyFailedToProcessFileError, HackyInternalError
+from hacky import HackyAssembler
+from helper import PROJECT_BASE_PATH
 from symbols import PRE_DEFINED_SYMBOLS
 
 
 class TestHackyAssembler:
     TEST_FILE_PATH = '/path/to/file.asm'
-    TEST_FIXTURES_PATH = './tests/fixtures/'
+    TEST_FIXTURES_PATH = PROJECT_BASE_PATH / 'tests/fixtures/'
 
     def get_fixture_file(self, file_name):
         return Path(self.TEST_FIXTURES_PATH) / file_name
+
+    @pytest.fixture
+    def symbol_table(self):
+        yield dict(PRE_DEFINED_SYMBOLS)
 
     @pytest.fixture
     def hacky(self):
@@ -61,7 +67,7 @@ class TestHackyAssembler:
                         "1111110010011000", "0000000000001010", "1110001100000001", "0000000000010111",
                         "1110101010000111"
                     ])
-            )
+            ),
     ))
     def test_assemble(self, hacky, test_file, result):
         test_file = self.get_fixture_file(test_file)
@@ -166,37 +172,58 @@ class TestHackyAssembler:
 
     @pytest.mark.parametrize('inst, opcode', (
             # opcode[0] + value[15]
-            (PRE_DEFINED_SYMBOLS['R0'], A_INST_OPCODE + '000000000000000'),
-            (PRE_DEFINED_SYMBOLS['R1'], A_INST_OPCODE + '000000000000001'),
-            (PRE_DEFINED_SYMBOLS['R2'], A_INST_OPCODE + '000000000000010'),
-            (PRE_DEFINED_SYMBOLS['R3'], A_INST_OPCODE + '000000000000011'),
-            (PRE_DEFINED_SYMBOLS['R4'], A_INST_OPCODE + '000000000000100'),
-            (PRE_DEFINED_SYMBOLS['R5'], A_INST_OPCODE + '000000000000101'),
-            (PRE_DEFINED_SYMBOLS['R6'], A_INST_OPCODE + '000000000000110'),
-            (PRE_DEFINED_SYMBOLS['R7'], A_INST_OPCODE + '000000000000111'),
-            (PRE_DEFINED_SYMBOLS['R8'], A_INST_OPCODE + '000000000001000'),
-            (PRE_DEFINED_SYMBOLS['R9'], A_INST_OPCODE + '000000000001001'),
-            (PRE_DEFINED_SYMBOLS['R10'], A_INST_OPCODE + '000000000001010'),
-            (PRE_DEFINED_SYMBOLS['R11'], A_INST_OPCODE + '000000000001011'),
-            (PRE_DEFINED_SYMBOLS['R12'], A_INST_OPCODE + '000000000001100'),
-            (PRE_DEFINED_SYMBOLS['R13'], A_INST_OPCODE + '000000000001101'),
-            (PRE_DEFINED_SYMBOLS['R14'], A_INST_OPCODE + '000000000001110'),
-            (PRE_DEFINED_SYMBOLS['R15'], A_INST_OPCODE + '000000000001111'),
-            (PRE_DEFINED_SYMBOLS['SCREEN'], A_INST_OPCODE + '100000000000000'),
-            (PRE_DEFINED_SYMBOLS['KBD'], A_INST_OPCODE + '110000000000000'),
-            (PRE_DEFINED_SYMBOLS['SP'], A_INST_OPCODE + '000000000000000'),
-            (PRE_DEFINED_SYMBOLS['LCL'], A_INST_OPCODE + '000000000000001'),
-            (PRE_DEFINED_SYMBOLS['ARG'], A_INST_OPCODE + '000000000000010'),
-            (PRE_DEFINED_SYMBOLS['THIS'], A_INST_OPCODE + '000000000000011'),
-            (PRE_DEFINED_SYMBOLS['THAT'], A_INST_OPCODE + '000000000000100'),
+            ('@R0', A_INST_OPCODE + '000000000000000'),
+            ('@R1', A_INST_OPCODE + '000000000000001'),
+            ('@R2', A_INST_OPCODE + '000000000000010'),
+            ('@R3', A_INST_OPCODE + '000000000000011'),
+            ('@R4', A_INST_OPCODE + '000000000000100'),
+            ('@R5', A_INST_OPCODE + '000000000000101'),
+            ('@R6', A_INST_OPCODE + '000000000000110'),
+            ('@R7', A_INST_OPCODE + '000000000000111'),
+            ('@R8', A_INST_OPCODE + '000000000001000'),
+            ('@R9', A_INST_OPCODE + '000000000001001'),
+            ('@R10', A_INST_OPCODE + '000000000001010'),
+            ('@R11', A_INST_OPCODE + '000000000001011'),
+            ('@R12', A_INST_OPCODE + '000000000001100'),
+            ('@R13', A_INST_OPCODE + '000000000001101'),
+            ('@R14', A_INST_OPCODE + '000000000001110'),
+            ('@R15', A_INST_OPCODE + '000000000001111'),
+            ('@SCREEN', A_INST_OPCODE + '100000000000000'),
+            ('@KBD', A_INST_OPCODE + '110000000000000'),
+            ('@SP', A_INST_OPCODE + '000000000000000'),
+            ('@LCL', A_INST_OPCODE + '000000000000001'),
+            ('@ARG', A_INST_OPCODE + '000000000000010'),
+            ('@THIS', A_INST_OPCODE + '000000000000011'),
+            ('@THAT', A_INST_OPCODE + '000000000000100'),
+            # testing absolute addressing mode
+            ('@0', A_INST_OPCODE + '000000000000000'),
+            ('@1', A_INST_OPCODE + '000000000000001'),
+            ('@16384', A_INST_OPCODE + '100000000000000'),
+            ('@24576', A_INST_OPCODE + '110000000000000'),
+
     ))
-    def test_assemble_a_instruction(self, hacky, inst, opcode):
-        assert hacky.assemble_a_instruction(inst) == opcode
+    def test_assemble_a_instruction(self, symbol_table, hacky, inst, opcode):
+        assert hacky.assemble_a_instruction(inst, symbol_table) == opcode
 
     @pytest.mark.parametrize('inst', (
-            -1,
-            32768
+            '@-1',
+            '@32768',
+            '@99999'
     ))
-    def test_assemble_a_instruction_out_of_boundary_error(self, hacky, inst):
-        with pytest.raises(HackyAInstructionOutOfBoundary):
-            assert hacky.assemble_a_instruction(inst)
+    def test_assemble_a_instruction_out_of_boundary_error(self, symbol_table, hacky, inst):
+        with pytest.raises(
+                HackyInternalError,
+                match=re.escape('Constant must be in the range (0, 32767)')
+        ):
+            assert hacky.assemble_a_instruction(inst, symbol_table)
+
+    @pytest.mark.parametrize('inst', (
+            '@label',
+            '@var'
+    ))
+    def test_assemble_a_instruction_resolving_error(self, symbol_table, hacky, inst):
+        with pytest.raises(
+                HackyInternalError,
+                match=re.escape(f'Can not resolve "{inst}" instruction')
+        ):
+            assert hacky.assemble_a_instruction(inst, symbol_table)

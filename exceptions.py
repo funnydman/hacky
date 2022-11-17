@@ -1,5 +1,5 @@
 class HackyBaseException(Exception):
-    ...
+    """Base exception for all Hacky error"""
 
 
 class HackySyntaxError(HackyBaseException):
@@ -9,6 +9,8 @@ class HackySyntaxError(HackyBaseException):
 class HackyFailedToProcessFileError(HackyBaseException):
     ...
 
+class HackyFailedToWriteFile(HackyBaseException):
+    ...
 
-class HackyAInstructionOutOfBoundary(HackySyntaxError):
+class HackyInternalError(HackySyntaxError):
     ...

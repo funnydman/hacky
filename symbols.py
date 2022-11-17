@@ -1,5 +1,14 @@
 from typing import Optional
 
+from constants import (
+    JumpOpcode,
+    DestOpcode,
+    CCompPartInst,
+    CJumpPartInst,
+    CompOpcode,
+    CDestPartInst
+)
+
 PRE_DEFINED_SYMBOLS: dict[str, int] = {
     'R0': 0,
     'R1': 1,
@@ -26,7 +35,7 @@ PRE_DEFINED_SYMBOLS: dict[str, int] = {
     'THAT': 4
 }
 
-DEST_SYMBOLS_TABLE: dict[Optional[str], str] = {
+DEST_SYMBOLS_TABLE: dict[Optional[CDestPartInst], DestOpcode] = {
     None: '000',
     'M': '001',
     'D': '010',
@@ -37,7 +46,7 @@ DEST_SYMBOLS_TABLE: dict[Optional[str], str] = {
     'ADM': '111'
 }
 
-JUMP_SYMBOLS_TABLE: dict[Optional[str], str] = {
+JUMP_SYMBOLS_TABLE: dict[Optional[CJumpPartInst], JumpOpcode] = {
     None: '000',
     'JGT': '001',
     'JEQ': '010',
@@ -84,7 +93,7 @@ _COMP_SYMBOLS_TABLE: dict[str, dict[str, str]] = {
     }
 }
 
-COMP_SYMBOLS_TABLE: dict[str, str] = {}
+COMP_SYMBOLS_TABLE: dict[CCompPartInst, CompOpcode] = {}
 
 for k, v in _COMP_SYMBOLS_TABLE.items():
     for inst, opcode in v.items():
