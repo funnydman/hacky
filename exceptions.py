@@ -3,7 +3,7 @@ class HackyBaseException(Exception):
 
 
 class HackySyntaxError(HackyBaseException):
-    ...
+    """Base exceptions for all Hacky syntax error"""
 
 
 class HackyFailedToProcessFileError(HackyBaseException):

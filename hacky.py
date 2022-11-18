@@ -1,9 +1,5 @@
 #!/usr/bin/python3
 """
-Symbols:
-- variable symbols
-- label symbols
-- pre-defined symbols
 
 TODO:
 add more tests (need 100%)

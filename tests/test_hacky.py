@@ -130,7 +130,6 @@ class TestHackyAssembler:
     ))
     @patch('hacky.HackyAssembler._preprocess_file')
     def test_assemble_(self, mock__preprocess_file, hacky, content, result):
-        # TODO: test symbol table
         mock__preprocess_file.return_value = content
         assert hacky.assemble(self.TEST_FILE_PATH) == result
 
