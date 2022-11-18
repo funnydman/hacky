@@ -1,4 +1,4 @@
-PRE_DEFINED_SYMBOLS = {
+SYMBOL_TABLE = {
     'R0': 0,
     'R1': 1,
     'R2': 2,

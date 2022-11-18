@@ -7,3 +7,15 @@ Usage:
 ```
 python hacky.py file.asm
 ```
+
+Run unit tests:
+
+```
+make run-unit-tests
+```
+
+Run static analysis
+
+```
+make run-static-analysis
+```

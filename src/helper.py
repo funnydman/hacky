@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import List
 
 from constants import (
     A_INST_MARK,
@@ -10,12 +9,11 @@ from constants import (
     COMMENT_MARK,
     OUTPUT_FILE_EXTENSION
 )
-from constants import Instruction
 from exceptions import (
     HackyFailedToProcessFileError,
     HackyFailedToWriteFile
 )
-from symbols import PRE_DEFINED_SYMBOLS
+from symbols import SYMBOL_TABLE
 
 SOURCE_BASE_PATH = Path(__file__).parent
 PROJECT_BASE_PATH = SOURCE_BASE_PATH.parent
@@ -23,7 +21,7 @@ PROJECT_BASE_PATH = SOURCE_BASE_PATH.parent
 
 class HackyAssemblerHelper:
     @staticmethod
-    def _is_a_instruction(inst: Instruction) -> bool:
+    def _is_a_instruction(inst: str) -> bool:
         return inst.startswith(A_INST_MARK)
 
     @staticmethod
@@ -31,7 +29,7 @@ class HackyAssemblerHelper:
         return astr.startswith(LABEL_STARTS_WITH) and astr.endswith(LABEL_ENDS_WITH)
 
     @staticmethod
-    def _get_constant_value(inst: Instruction) -> str:
+    def _get_a_const_value(inst: str) -> str:
         return inst.removeprefix(A_INST_MARK)
 
     @staticmethod
@@ -48,7 +46,7 @@ class HackyAssemblerHelper:
             )
 
     @staticmethod
-    def _write_to_file(file_name: str, content) -> None:
+    def _write_to_file(file_name: str, content: str) -> None:
         try:
             with open(file_name, 'w', encoding='utf-8') as out_file:
                 out_file.writelines(content)
@@ -64,13 +62,10 @@ class HackyAssemblerHelper:
         except (OSError, FileNotFoundError) as exc:
             raise HackyFailedToProcessFileError(f'Unable to process the file. Reason: {str(exc)}') from exc
 
-    def _preprocess_file(self, file_path: str) -> List[Instruction]:
-        """
-        Remove empty lines, comments and strip
-        """
+    def _preprocess_file(self, file_path: str) -> list[str]:
         self._validate_file_extension(file_path)
 
-        instructions: list[Instruction] = []
+        instructions: list[str] = []
         content = self._read_file(file_path)
         for line in content:
             if line.startswith(COMMENT_MARK) or not line:
@@ -82,9 +77,9 @@ class HackyAssemblerHelper:
             instructions.append(line)
         return instructions
 
-    def _build_symbol_table(self, content: List[str]) -> dict:
+    def _build_symbol_table(self, content: list[str]) -> dict:
         curr_addr = 0
-        symbol_table = dict(PRE_DEFINED_SYMBOLS)
+        symbol_table = dict(SYMBOL_TABLE)
         for line in content:
             if self._is_label(line):
                 label = self._get_label_name(line)
@@ -93,17 +88,6 @@ class HackyAssemblerHelper:
             else:
                 curr_addr += 1
         return symbol_table
-
-    def _is_c_instruction(self, inst: Instruction) -> bool:
-        return not self._is_a_instruction(inst) and not self._is_label(inst)
-
-    @staticmethod
-    def _is_absolute_address(astr: str) -> bool:
-        try:
-            int(astr)
-            return True
-        except (ValueError, TypeError):
-            return False
 
     @staticmethod
     def _get_base_filename(file_path: str) -> str:

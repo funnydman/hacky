@@ -5,10 +5,10 @@ from unittest.mock import patch, mock_open
 import pytest
 
 from constants import C_INST_OPCODE, A_INST_OPCODE
-from exceptions import HackySyntaxError, HackyFailedToProcessFileError
+from exceptions import HackySyntaxError, HackyFailedToProcessFileError, HackyFailedToWriteFile
 from hacky import HackyAssembler
 from helper import PROJECT_BASE_PATH
-from symbols import PRE_DEFINED_SYMBOLS
+from symbols import SYMBOL_TABLE
 
 
 class TestHackyAssembler:
@@ -20,7 +20,7 @@ class TestHackyAssembler:
 
     @pytest.fixture
     def symbol_table(self):
-        yield dict(PRE_DEFINED_SYMBOLS)
+        yield dict(SYMBOL_TABLE)
 
     @pytest.fixture
     def hacky(self):
@@ -129,7 +129,7 @@ class TestHackyAssembler:
             ),
     ))
     @patch('hacky.HackyAssembler._preprocess_file')
-    def test_assemble(self, mock__preprocess_file, hacky, content, result):
+    def test_assemble_mock_preprocessing_file(self, mock__preprocess_file, hacky, content, result):
         mock__preprocess_file.return_value = content
         assert hacky.assemble(self.TEST_FILE_PATH) == result
 
@@ -153,6 +153,16 @@ class TestHackyAssembler:
         with pytest.raises(HackyFailedToProcessFileError, match=error_msg):
             hacky.assembly_to_file(self.TEST_FILE_PATH)
 
+    @pytest.mark.parametrize("error, error_msg", (
+            (OSError('Error msg'), 'Unable to save file. Reason: Error msg'),
+    ))
+    @patch('helper.open', return_value=mock_open())
+    @patch('helper.HackyAssemblerHelper._read_file')
+    def test_assembly_to_file_write_file_error(self, _, mocked_open, hacky, error, error_msg):
+        mocked_open.side_effect = error
+        with pytest.raises(HackyFailedToWriteFile, match=error_msg):
+            hacky.assembly_to_file(self.TEST_FILE_PATH)
+
     @pytest.mark.parametrize('inst, opcode', (
             # dest = comp ; jump
             # opcode + comp + dest + jump
@@ -164,6 +174,8 @@ class TestHackyAssembler:
             ("D=M", C_INST_OPCODE + '1' + '110000' + '010' + '000'),
             ("M=D+1", C_INST_OPCODE + '0' + '011111' + '001' + '000'),
             ("M=0", C_INST_OPCODE + '0' + '101010' + '001' + '000'),
+            ("A=M", C_INST_OPCODE + '1' + '110000' + '100' + '000'),
+            ("ADM=M", C_INST_OPCODE + '1' + '110000' + '111' + '000'),
             # do nothing instructions examples
             ("D", C_INST_OPCODE + '0' + '001100' + '000' + '000'),
             ("M+1", C_INST_OPCODE + '1' + '110111' + '000' + '000'),

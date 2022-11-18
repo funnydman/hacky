@@ -12,4 +12,5 @@ run-unit-tests:
 
 
 run-static-analysis:
-	pylint ${UNIT_TEST_FOLDER} ${SOURCE_DIR} && mypy ${UNIT_TEST_FOLDER}
+	pylint ${SOURCE_DIR} ${UNIT_TEST_FOLDER}
+	mypy --show-error-codes ${SOURCE_DIR} ${UNIT_TEST_FOLDER}
