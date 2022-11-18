@@ -1,5 +1,5 @@
 import string
-from typing import TypeVar
+from typing import TypeVar, NewType
 
 A_INST_MARK = '@'
 A_INST_OPCODE = '0'
@@ -17,6 +17,7 @@ ALLOWED_SYMBOL_CHARS = set(string.ascii_letters + string.digits + '_.$:')
 A_CONSTANT_RANGE = (0, 32767)
 
 AInstruction = TypeVar('AInstruction', bound=str)
+Opcode = TypeVar('Opcode', bound=str)
 AInst = TypeVar('AInst', bound=str)
 CInstruction = TypeVar('CInstruction', bound=str)
 
@@ -26,14 +27,8 @@ CDestPartInst = TypeVar('CDestPartInst', bound=str)
 
 Instruction = TypeVar('Instruction', bound=str)
 # must be sub-typed from Instruction somehow
-
-Opcode = TypeVar('Opcode', bound=str)
-CompOpcode = TypeVar('CompOpcode', bound=str)
-JumpOpcode = TypeVar('JumpOpcode', bound=str)
-DestOpcode = TypeVar('DestOpcode', bound=str)
-
-# DestOpcode = NewType('DestOpcode', str)
-# CompOpcode = NewType('CompOpcode', str)
-# JumpOpcode = NewType('JumpOpcode', str)
+DestOpcode = NewType('DestOpcode', str)
+CompOpcode = NewType('CompOpcode', str)
+JumpOpcode = NewType('JumpOpcode', str)
 
 SymbolTable = TypeVar('SymbolTable', bound=dict)

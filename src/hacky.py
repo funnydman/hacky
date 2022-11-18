@@ -1,21 +1,9 @@
 #!/usr/bin/python3
-"""
 
-TODO:
-add more tests (need 100%)
-configure run-static analysis, add more typing, refactor some parts, add proper types
-"""
 import logging
 from typing import List
 
-from constants import (
-    Instruction,
-    CInstruction,
-    Opcode,
-    AInstruction,
-    SymbolTable,
-    VAR_INST_START_ADDR
-)
+from constants import AInstruction, CInstruction, Instruction, Opcode, SymbolTable, VAR_INST_START_ADDR
 from exceptions import HackySyntaxError, HackyBaseException
 from helper import HackyAssemblerHelper
 from logger import logger
@@ -74,10 +62,8 @@ class HackyAssembler(HackyAssemblerHelper):
                     symbol_table[a_const] = curr_var_addr
                     curr_var_addr += 1
                 assembled_inst = self.assemble_a_instruction(line, symbol_table)
-            elif self._is_c_instruction(line):
-                assembled_inst = self.assemble_c_instruction(line)
             else:
-                raise HackySyntaxError(f'Unknown instruction {line}')
+                assembled_inst = self.assemble_c_instruction(line)
 
             opcodes.append(assembled_inst)
 

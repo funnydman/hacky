@@ -2,13 +2,9 @@ from dataclasses import dataclass
 from typing import Optional
 
 from common.models import InstructionABC
+from constants import AInst, CompOpcode, JumpOpcode, DestOpcode, SymbolTable
 from constants import (
-    AInst,
-    CompOpcode,
-    DestOpcode,
-    JumpOpcode,
     C_INST_OPCODE,
-    SymbolTable,
     A_INST_MARK,
     A_INST_OPCODE,
     INSTRUCTION_SIZE,

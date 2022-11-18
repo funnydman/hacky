@@ -1,6 +1,9 @@
 # HACKY
 
-Symbols:
-- variable symbols
-- label symbols
-- pre-defined symbols
+Assembler for hack IS (nand2tetris) written in Python
+
+Usage:
+
+```
+python hacky.py file.asm
+```

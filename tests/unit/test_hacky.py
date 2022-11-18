@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 import pytest
 
@@ -129,9 +129,29 @@ class TestHackyAssembler:
             ),
     ))
     @patch('hacky.HackyAssembler._preprocess_file')
-    def test_assemble_(self, mock__preprocess_file, hacky, content, result):
+    def test_assemble(self, mock__preprocess_file, hacky, content, result):
         mock__preprocess_file.return_value = content
         assert hacky.assemble(self.TEST_FILE_PATH) == result
+
+    def test_assembly_to_file(self, hacky):
+        open_mock = mock_open()
+        input_file = self.get_fixture_file('pong.asm')
+        output_file = self.get_fixture_file('pong.hack')
+        with patch("helper.open", open_mock, create=True):
+            hacky.assembly_to_file(input_file)
+
+        open_mock.assert_called_with(str(output_file), "w", encoding='utf-8')
+
+    @pytest.mark.parametrize("error, error_msg", (
+            (OSError('Error msg'), 'Unable to process the file. Reason: Error msg'),
+            (FileNotFoundError('Error msg'), 'Unable to process the file. Reason: Error msg'),
+
+    ))
+    @patch('helper.open', return_value=mock_open())
+    def test_assembly_to_file_read_file_error(self, mocked_open, hacky, error, error_msg):
+        mocked_open.side_effect = error
+        with pytest.raises(HackyFailedToProcessFileError, match=error_msg):
+            hacky.assembly_to_file(self.TEST_FILE_PATH)
 
     @pytest.mark.parametrize('inst, opcode', (
             # dest = comp ; jump

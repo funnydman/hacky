@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List
 
 from constants import (
-    Instruction,
     A_INST_MARK,
     LABEL_STARTS_WITH,
     LABEL_ENDS_WITH,
@@ -11,13 +10,15 @@ from constants import (
     COMMENT_MARK,
     OUTPUT_FILE_EXTENSION
 )
+from constants import Instruction
 from exceptions import (
     HackyFailedToProcessFileError,
     HackyFailedToWriteFile
 )
 from symbols import PRE_DEFINED_SYMBOLS
 
-PROJECT_BASE_PATH = Path(__file__).parent
+SOURCE_BASE_PATH = Path(__file__).parent
+PROJECT_BASE_PATH = SOURCE_BASE_PATH.parent
 
 
 class HackyAssemblerHelper:
@@ -32,10 +33,6 @@ class HackyAssemblerHelper:
     @staticmethod
     def _get_constant_value(inst: Instruction) -> str:
         return inst.removeprefix(A_INST_MARK)
-
-    @staticmethod
-    def _get_binary(val: int) -> str:
-        return bin(val)[2:]
 
     @staticmethod
     def _get_label_name(astr: str) -> str:
@@ -73,7 +70,7 @@ class HackyAssemblerHelper:
         """
         self._validate_file_extension(file_path)
 
-        mnemonics: list[Instruction] = []
+        instructions: list[Instruction] = []
         content = self._read_file(file_path)
         for line in content:
             if line.startswith(COMMENT_MARK) or not line:
@@ -82,8 +79,8 @@ class HackyAssemblerHelper:
                 # in-line comment, remove
                 line, _, _ = line.partition(COMMENT_MARK)
             line = line.strip()
-            mnemonics.append(line)
-        return mnemonics
+            instructions.append(line)
+        return instructions
 
     def _build_symbol_table(self, content: List[str]) -> dict:
         curr_addr = 0

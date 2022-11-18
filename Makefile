@@ -1,8 +1,15 @@
-TESTS_FOLDER := "tests/"
-SRC_FOLDER := "*.py"
+UNIT_TEST_FOLDER := "tests/unit/"
+SOURCE_DIR := "src/"
+UNIT_TESTS_FAIL_UNDER := 95
 
 run-unit-tests:
-	coverage run -m pytest -v ${TESTS_FOLDER} && coverage report -m
+	python3 -m pytest \
+	-v \
+	--cov-report term-missing \
+	--cov-fail-under="${UNIT_TESTS_FAIL_UNDER}" \
+	--cov="${SOURCE_DIR}" \
+	"${UNIT_TEST_FOLDER}"
+
 
 run-static-analysis:
-	pylint ${TESTS_FOLDER} ${SRC_FOLDER} && mypy ${TESTS_FOLDER}
+	pylint ${UNIT_TEST_FOLDER} ${SOURCE_DIR} && mypy ${UNIT_TEST_FOLDER}
